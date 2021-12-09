@@ -1,0 +1,32 @@
+{
+  "name": "socialite.io",
+  "version": "1.0.0",
+  "description": "A very simple mmo using Colyseus",
+  "main": "index.js",
+  "scripts": {
+    "server-dev": "nodemon server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LoganMichalicek/socialite.io.git"
+  },
+  "author": "LoganMichalicek",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LoganMichalicek/socialite.io/issues"
+  },
+  "homepage": "https://github.com/LoganMichalicek/socialite.io#readme",
+  "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.4",
+    "babel-loader": "^8.2.3",
+    "jest": "^27.4.3",
+    "nodemon": "^2.0.15",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.4.0"
+  }
+}

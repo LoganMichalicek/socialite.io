@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   mode: 'development',
-  entry: path.resolve(__dirname, './src/client/app.js'),
+  entry: path.resolve(__dirname, './client/src/game.js'),
   module: {
     rules: [
       {

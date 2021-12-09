@@ -4,7 +4,10 @@
   "description": "A very simple mmo using Colyseus",
   "main": "index.js",
   "scripts": {
-    "server-dev": "nodemon server/index.js"
+    "server-dev": "nodemon server/index.js",
+    "build-dev": "webpack --watch",
+    "start": "node server/index.js",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -27,6 +30,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "phaser": "^3.55.2",
     "socket.io": "^4.4.0"
   }
 }

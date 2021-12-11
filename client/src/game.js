@@ -8,7 +8,7 @@ var config = {
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 300 },
+      gravity: { y: 0 },
       debug: false
     }
   },
@@ -19,14 +19,11 @@ var config = {
   }
 };
 
+var players = [];
+
 function loadImages(context) {
-  // First param is a key related to this image asset. Second is a path to the asset itself
-  // NOTE: the assets routing is served by the server, pointing to the assets folder at root
-  // NOTE 2: this is usually directly in the preload function. I abstracted it and set context to 'this'
   context.load.image('sky', 'assets/sky.png');
   context.load.image('ground', 'assets/platform.png');
-  context.load.image('star', 'assets/star.png');
-  context.load.image('bomb', 'assets/bomb.png');
   context.load.spritesheet('dude',
       'assets/dude.png',
       { frameWidth: 32, frameHeight: 48 }
@@ -34,11 +31,6 @@ function loadImages(context) {
 }
 
 function createPlatforms(platforms) {
-  /**
-   * Create an object at the specified location (coords are based on middle of object)
-   * The setScale will adjust the overall size of the object, and refresh body will
-   * refresh the collisions and such to the new scale.
-   */
   platforms.create(400, 568, 'ground').setScale(2).refreshBody();
   platforms.create(600, 400, 'ground');
   platforms.create(50, 250, 'ground');
@@ -46,17 +38,36 @@ function createPlatforms(platforms) {
 }
 
 function addCollidersAndOverlaps(context, objects) {
-  /**
-   * ===== this.physics.add.collision && this.physics.add.overlap
-   * 1 & 2. Objects to compare to see if they collide/overlap
-   * 3. An optional callback function (cbA) that is called when they collide/overlap
-   * 4. An optional callback function (cbB) that lets you perform additional checks against
-   *    the two objects if they collide/overlap. If this is set, then cbA will only fire
-   *    if cbB returns true
-   * 5. The context in which to run the callbacks (usually 'this')
-   * NOTE: Collisions will not let items pass through each other, but overlap will
-   */
   context.physics.add.collider(objects.player, objects.platforms);
+}
+
+function playersInitialization(context, players) {
+  for (let [key, position] of Object.entries(context.players)) {
+    if (key !== context.socket.id) {
+      addPlayer(context, {position, id: key});
+    }
+  }
+}
+
+function addPlayer(context, playerInfo) {
+  var newPlayer = context.physics.add.sprite(playerInfo.position.x, playerInfo.position.y, 'dude');
+  newPlayer.playerId = playerInfo.id;
+  newPlayer.setBounce(0.2);
+  newPlayer.setCollideWorldBounds(true);
+  newPlayer.anims.play('turn');
+  players.push(newPlayer);
+}
+
+function setPlayerPositions(context) {
+  for (let [key, position] of Object.entries(context.players)) {
+    if (key !== context.socket.id) {
+      let player = players.filter(player => player.playerId === key)[0];
+      if (player) {
+        player.x = position.x;
+        player.y = position.y;
+      }
+    }
+  }
 }
 
 var game = new Phaser.Game(config);
@@ -69,25 +80,45 @@ function preload () {
 
 function create () {
   //
+  // ===== Add the background and score text to the game
+  this.add.image(400, 300, 'sky');
+
+  this.players = {};
+
   this.socket = io();
 
   this.socket.on('message', text => {
     console.log(text);
   });
 
-  // this.socket.emit('message', 'I joined!');
+  this.socket.on('init', data => {
+    console.log('init', data);
+    playersInitialization(this, data);
+  });
 
-  // ===== Add the background and score text to the game
-  this.add.image(400, 300, 'sky');
+  this.socket.on('playersData', data => {
+    this.players = data;
+    setPlayerPositions(this);
+  });
 
+  this.socket.on('newPlayer', playerData => {
+    addPlayer(this, playerData);
+  });
+
+  this.socket.on('playerLeft', id => {
+    console.log('Player left!:', id);
+    delete this.players[id];
+    console.log('Player objects:', players);
+    delete players.filter(player => player.playerId === id);
+    console.log('New player objects:', players);
+  })
 
   // ===== Add the player object to the game
-  player = this.physics.add.sprite(100, 450, 'dude');
+  player = this.physics.add.sprite(400, 300, 'dude');
   // Set the player's "bouncyness"
   player.setBounce(0.2);
   // Don't let the player walk outside of the screen borders
   player.setCollideWorldBounds(true);
-
 
   // ===== Add platforms to the game
   // Static objects are fixed and can't move in the world.
@@ -112,7 +143,7 @@ function create () {
 }
 
 function update () {
-  movementController(cursors, player);
+  movementController(cursors, player, this.socket);
 }
 
 function setAnimations(context) {

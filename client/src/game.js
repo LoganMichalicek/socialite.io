@@ -61,7 +61,11 @@ function addPlayer(context, playerInfo) {
 function setPlayerPositions(context) {
   for (let [key, position] of Object.entries(context.players)) {
     if (key !== context.socket.id) {
-      console.log(key, position);
+      let player = players.filter(player => player.playerId === key)[0];
+      if (player) {
+        player.x = position.x;
+        player.y = position.y;
+      }
     }
   }
 }
@@ -99,6 +103,14 @@ function create () {
 
   this.socket.on('newPlayer', playerData => {
     addPlayer(this, playerData);
+  });
+
+  this.socket.on('playerLeft', id => {
+    console.log('Player left!:', id);
+    delete this.players[id];
+    console.log('Player objects:', players);
+    delete players.filter(player => player.playerId === id);
+    console.log('New player objects:', players);
   })
 
   // ===== Add the player object to the game

@@ -41,13 +41,12 @@ io.on('connection', (socket) => {
 
   const gameLoopInterval = setInterval(() => {
     socket.emit('playersData', players);
-  }, 3000);
+  }, 200);
 
   socket.on('disconnect', (reason) => {
     clearInterval(gameLoopInterval);
     delete players[socket.id];
-    console.log('Someone disconnected! ' + socket.id);
-    io.emit('message', 'Someone disconnected! ' + socket.id);
+    socket.broadcast.emit('playerLeft', socket.id);
   });
 
 });
